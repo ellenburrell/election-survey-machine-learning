@@ -1,0 +1,370 @@
+---
+title: "Final Project"
+author: "Ellen Burrell: PSTAT 131"
+output:
+    html_document:
+      toc: true
+      toc_float: true
+      code_folding: show
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, message = FALSE,
+                      warning = FALSE)
+```
+
+## SECTIONS
+
+## LIBRARYS IMPORTED
+
+```{r}
+library(tidyverse)
+library(tidymodels)
+library(ISLR)
+library(rpart.plot)
+library(vip)
+library(janitor)
+library(randomForest)
+library(xgboost)
+library(here)
+library(tune)
+library(parsnip)
+```
+
+## INTRODUCTION
+
+American Politics are becoming increasingly partisan at an alarming rate. While the United States has two main political parties, the division among primary voters for each party is increasing. According to a study done by the Pew Research Center, "Across 30 political values – encompassing attitudes about guns, race, immigration, foreign policy and other realms – the average partisan gap is 39 percentage points" between the two parties. The average difference for other grouping factors such as Education, Age, or Gender were around 6-10 percentage points (Nadeem). From this data, we can conclude that the political values that each party represents must be antithetical to have created such a sharp division, and therefore members voting within party lines have strong and contrary opinions about those values.
+
+If given such data, could we predict how a person voted in the 2016 presidential election? 
+
+
+
+
+
+```{r}
+# reading in our data 
+survey <- read_csv("data/no_na.csv") # reading in our data 
+# factoring data
+survey <- survey %>%
+  mutate(accurately_counted2_2016 = factor(accurately_counted2_2016, levels = c("Not at all confident","Not too confident",
+                                                                                "Somewhat confident","Very confident"),exclude = NULL)) %>%
+  mutate(alcohol_2016 = factor(alcohol_2016, levels = c("Yes","No"),exclude=NULL)) %>%
+  mutate(smoke100_2016 = factor(smoke100_2016, levels = c("Yes","No"),exclude=NULL)) %>%
+  mutate(pid7_2016 = factor(pid7_2016)) %>%
+  mutate(ideo5_2016 = factor(ideo5_2016, levels = c("Very liberal","Liberal","Not sure","Moderate","Conservative","Very conservative"), exclude = NULL)) %>%
+  mutate(pew_religimp_2016 = factor(pew_religimp_2016, levels = c("Not at all important","Not too important","Somewhat important","Very important"))) %>%
+  mutate(presvote16post_2016 = factor(presvote16post_2016))
+is.factor(survey$presvote16post_2016)
+is.factor(survey$accurately_counted2_2016)
+is.factor(survey$alcohol_2016)
+is.factor(survey$smoke100_2016)
+is.factor(survey$pid7_2016)
+is.factor(survey$ideo5_2016)
+is.factor(survey$pew_religimp_2016)
+```
+
+## INTRODUCTION
+
+## EDA
+
+exploring relationships between outcome variable
+
+## FEATURE EXTRACTION
+
+had to remove anyone who didn't answer who they voted for
+
+## DATA SPLITING
+
+```{r}
+set.seed(10) # setting seed
+survey_split <- initial_split(survey, prop = 0.70,
+                                strata = presvote16post_2016)
+survey_train <- training(survey_split)
+survey_test <- testing(survey_split)
+```
+
+# Does this look like a good recipe?
+```{r}
+survey_folds <- vfold_cv(survey_train, v = 5, strata = presvote16post_2016)
+survey_recipe <- recipe(presvote16post_2016 ~ ft_black_2016 + ft_white_2016 + ft_hisp_2016 + 
+                           ft_asian_2016 + ft_muslim_2016 + ft_jew_2016 + ft_christ_2016 + ft_fem_2016 +
+                          ft_immig_2016 + ft_blm_2016 + ft_wallst_2016 + ft_gays_2016 + ft_unions_2016 +
+                          ft_police_2016 + ft_altright_2016 + accurately_counted2_2016 + alcohol_2016 + 
+                          smoke100_2016 + pew_religimp_2016, survey_train) %>% 
+  step_dummy(accurately_counted2_2016,alcohol_2016,smoke100_2016,pew_religimp_2016) %>% 
+  step_normalize(all_predictors())
+#survey_recipe %>% prep() %>% juice()
+```
+
+using cross-validation
+
+## Model FITTING
+
+**Logisitic Regression**
+
+```{r}
+# logistic regression model using 'glm'
+reg <- logistic_reg() %>%
+  set_engine('glm') %>%
+  set_mode('classification')
+
+# creating a workflow
+reg_wkflow <- workflow() %>%
+  add_model(reg) %>%
+  add_recipe(survey_recipe)
+
+# fitting workflow w/ training data
+reg_fit <- fit(reg_wkflow, survey_train)
+
+log_reg_acc <- augment(reg_fit, new_data = survey_train) %>%
+  accuracy(truth = 'presvote16post_2016', estimate = .pred_class)
+log_reg_acc <- log_reg_acc$.estimate
+
+
+#reg_fold <- reg_wkflow %>%
+  #fit_resamples(survey_folds)
+#collect_reg <- collect_metrics(reg_fold)
+#reg_fold <- fit_resamples(reg_wkflow,survey_folds)
+#collect_reg <- collect_metrics(reg_fold)
+```
+
+# Is accuracy the same as roc_auc ?
+
+
+**Regularized Regression** **ELASTIC NET**
+
+```{r}
+library(parsnip)
+elastic_net <- multinom_reg(penalty = tune(),
+                                 mixture = tune()) %>%
+  set_mode("classification") %>%
+  set_engine("glmnet")
+
+en_workflow <- workflow() %>%
+  add_recipe(survey_recipe) %>%
+  add_model(elastic_net)
+
+en_grid <- grid_regular(penalty(range = c(-5,5)),
+                        mixture(range = c(0,1)), levels = 10)
+
+tune_res <- tune_grid(en_workflow,resamples = survey_folds,grid=en_grid)
+```
+
+
+```{r}
+best <- select_best(tune_res,metric='roc_auc')
+en_final <- finalize_workflow(en_workflow,best)
+en_final_fit <- fit(en_final, data = survey_train)
+predicted <- augment(en_final_fit, new_data = survey_test) %>%
+  select(presvote16post_2016, starts_with(".pred"))  %>%
+  roc_auc(presvote16post_2016, `.pred_Did not vote for President`:.pred_Other)
+reg_reg <- predicted$.estimate
+```
+
+76 % roc_auc Not bad
+
+**DECSION TREE MODEL**
+
+```{r}
+# setting up decision tree model
+tree_spec <- decision_tree() %>%
+  set_engine("rpart") %>%
+  set_mode("classification") %>%
+  set_args(cost_complexity=tune())
+
+#setting up the workflow
+wrkflow <- workflow() %>%
+  add_model(tree_spec) %>%
+  add_recipe(survey_recipe)
+
+param_grid <- grid_regular(cost_complexity(range = c(-3, -1)), levels = 10)
+```
+
+```{r}
+tune_res <- tune_grid(
+  wrkflow, 
+  resamples = survey_folds, 
+  grid = param_grid, 
+  metrics = metric_set(roc_auc)
+)
+
+write_rds(tune_res, file = "data/decison-tree-res_rough4.rds")
+```
+
+
+```{r}
+decision_tree <- read_rds("data/decison-tree-res_rough4.rds")
+decision <- decision_tree %>%
+  collect_metrics() %>%
+  arrange(desc(mean)) %>%
+  filter(row_number()==1)
+decison_tree_roc <- decision$mean
+```
+
+62 % roc_auc Is this grabbing the best one?
+
+**Random Forest**
+
+```{r}
+rf <- rand_forest() %>%
+  set_engine('ranger',importance='impurity') %>%
+  set_mode('classification') %>%
+  set_args(mtry=tune(),trees=tune(),min_n=tune())
+
+rf_wrkflow <- workflow() %>%
+  add_recipe(survey_recipe) %>%
+  add_model(rf)
+
+rf_grid <- grid_regular(mtry(range=c(1,21)), 
+                        trees(range = c(0,50)),
+                        min_n(range = c(1,20)),
+                        levels = 5)
+library(ranger)
+tune_forest <- tune_grid(rf_wrkflow, resamples = survey_folds, grid = rf_grid, metrics = metric_set(roc_auc))
+```
+
+```{r}
+write_rds(tune_forest, file = "data/rand-forest-res_rough4.rsd")
+```
+
+
+```{r}
+tune_forest <- read_rds("data/rand-forest-res_rough4.rsd")
+```
+
+
+```{r}
+rand_forest_tuned <- tune_forest %>%
+  collect_metrics() %>%
+  arrange(desc(mean)) %>%
+  filter(row_number()==1)
+rf_mean <- rand_forest_tuned$mean
+```
+
+75 % roc_auc
+
+
+**Boosting**
+```{r}
+library(xgboost)
+boasted_tree <- boost_tree() %>%
+  set_engine('xgboost') %>%
+  set_mode('classification') %>%
+  set_args(trees=tune())
+
+boasted_wrkflow <- workflow() %>%
+  add_recipe(survey_recipe) %>%
+  add_model(boasted_tree)
+
+boasted_grid <- grid_regular(trees(c(10,2000)), levels = 10)
+
+boasted_tune_res <- tune_grid(boasted_wrkflow, resamples=survey_folds, grid = boasted_grid, metrics = metric_set(roc_auc))
+
+write_rds(boasted_tune_res, file = "data/boasted_tune_res_rough4.rsd")
+```
+
+
+```{r}
+boasted_tune_res <- read_rds(file = "data/boasted_tune_res_rough4.rsd")
+boasted <- boasted_tune_res %>%
+  collect_metrics() %>%
+  arrange(desc(mean)) %>%
+  filter(row_number()==1)
+boasted_mean <- boasted$mean
+```
+
+
+
+```{r}
+accuracies <- c(log_reg_acc,reg_reg,decison_tree_roc,rf_mean,boasted_mean)
+models <- c("Logistic Regression", "Regularized Regression (Elastic Net)","Decsion Tree", "Random Forest","Boasted Tree")
+results <- tibble(models=models,accuracies= accuracies)
+results %>%
+  arrange(-accuracies)
+```
+# fitting on a training data,
+# fit best model on testing data
+
+
+
+
+**MISC Visualizations**
+```{r}
+#ELASTIC NET PLOT
+#autoplot(tune_res)
+```
+
+```{r} 
+#
+predicted %>% roc_curve(presvote16post_2016, `.pred_Did not vote for President`:.pred_Other) %>%
+  autoplot()
+```
+
+```{r}
+augment(en_final_fit, new_data = survey_test) %>%
+  conf_mat(truth = presvote16post_2016, estimate = .pred_class)  %>%
+  autoplot(type='heatmap')
+```
+
+```{r}
+best_complex <- select_best(decision_tree, metric = "roc_auc")
+class_tree_final <- finalize_workflow(wrkflow, best_complex)
+class_tree_final_fit <- fit(class_tree_final, data = survey_train)
+class_tree_final_fit %>%
+  extract_fit_engine() %>%
+  rpart.plot()
+```
+
+```{r}
+rand_forest <- read_rds(file = "data/rand-forest-res.rsd")
+rand_forest %>%
+  autoplot()
+```
+
+
+```{r}
+# Random Forest
+best_rf <- select_best(rand_forest, metric = "roc_auc")
+rf_final <- finalize_workflow(rf_wrkflow, best_rf)
+set.seed(10)
+class_tree_final_fit <- fit(rf_final, data = survey_train)
+class_tree_final_fit %>%
+  extract_fit_engine() %>%
+  vip()
+```
+
+```{r}
+# BOASTING
+boasted_tune_res <- read_rds(file = "data/boasted_tune_res.rsd")
+boasted_tune_res %>%
+  autoplot()
+```
+
+```{r}
+decision_tree <- read_rds("data/decison-tree-res.rds")
+autoplot(decision_tree)
+```
+**Random Forest**
+
+uses at least 4 model classes
+
+## CONCLUSION
+
+## Code
+
+Uses the tidyverse and tidymodels for fitting models, etc. includes comments as necessary. Uses code folding so huge blocks of code aren't displayed when knitting.
+
+## Narration
+
+## EDA
+
+## Organization & Structure
+
+## Feature Extraction
+
+## Data Spliting
+
+## Model Fitting
+
+## CITATIONS
+Nadeem, Reem. “In a Politically Polarized Era, Sharp Divides in Both Partisan Coalitions.” Pew Research Center - U.S. Politics &amp; Policy, Pew Research Center, 30 May 2020, https://www.pewresearch.org/politics/2019/12/17/in-a-politically-polarized-era-sharp-divides-in-both-partisan-coalitions/. 

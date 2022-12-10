@@ -1,0 +1,25 @@
+izip_2016: ZIP code
+presvote16post_2016: who did you vote for in the election for President? 
+ft_black_2016: feeling thermometer for 'Blacks'
+ft_white_2016: feeling thermometer for 'Whites'       
+ft_hisp_2016: feeling thermometer for 'Hispanics'         
+ft_asian_2016: feeling thermometer for 'Asians'        
+ft_muslim_2016: feeling thermometer for 'Muslims'
+ft_jew_2016: feeling thermometer for 'Jews'
+ft_christ_2016: feeling thermometer for 'Christains'
+ft_fem_2016: feeling thermometer for 'Feminists'
+ft_immig_2016: feeling thermometer for 'Immigrants'
+ft_blm_2016: feeling thermometer for 'Black Lives Matter'       
+ft_wallst_2016: feeling thermometer for 'Wall Street Bankers'
+ft_gays_2016: feeling thermometer for 'Gays and Lesbians'
+ft_unions_2016: feeling thermometer for 'Labor Unions'
+ft_police_2016: feeling thermometer for 'Police Officers'
+ft_altright_2016: feeling thermometer for 'The alt-right movement'
+accurately_counted2_2016: how confident are you that the votes in the 2016 election across the country were accurately counted?
+alcohol_2016: do you, personally, know anyone who has been addicted to alcohol? 
+smoke100_2016: have you smoked at least 100 cigarettes in your entire life? 
+pid7_2016: generally speaking, do you think of yourself as a ...? (party affiliation)
+ideo5_2016: in general, how would you describe your own political viewpoint? (different levels of liberal and conservative)
+pew_religimp_2016: how important is religion in your life?
+starttime_2016: Interview Start Time
+endtime_2016: Interview End Time

@@ -1,0 +1,248 @@
+---
+title: "Final Project"
+author: "Ellen Burrell: PSTAT 131"
+output:
+    html_document:
+      toc: true
+      toc_float: true
+      code_folding: show
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, message = FALSE,
+                      warning = FALSE)
+```
+
+## SECTIONS 
+## LIBRARYS IMPORTED
+```{r}
+library(tidyverse)
+library(tidymodels)
+library(ISLR)
+library(rpart.plot)
+library(vip)
+library(janitor)
+library(randomForest)
+library(xgboost)
+library(here)
+```
+
+
+```{r, eval = FALSE}
+# reading in our data 
+survey <- read_csv("data/cd_2016.csv") # reading in our data 
+# factoring data
+survey <- survey %>%
+  mutate(accurately_counted2_2016 = factor(accurately_counted2_2016, levels = c("Not at all confident","Not too confident",
+                                                                                "Somewhat confident","Very confident"),exclude = NULL)) %>%
+  mutate(alcohol_2016 = factor(alcohol_2016, levels = c("Yes","No"),exclude=NULL)) %>%
+  mutate(smoke100_2016 = factor(smoke100_2016, levels = c("Yes","No"),exclude=NULL)) %>%
+  mutate(pid7_2016 = factor(pid7_2016, levels = c("Strong Democrat","Lean Democrat","Not very strong Democrat","Not sure
+                                                  ","Independent","Not very strong Republican","Lean Republican","Strong Republican"))) %>%
+  mutate(ideo5_2016 = factor(ideo5_2016, levels = c("Very liberal","Liberal","Not sure","Moderate","Conservative","Very conservative"), exclude = NULL)) %>%
+  mutate(pew_religimp_2016 = factor(pew_religimp_2016, levels = c("Not at all important","Not too important","Somewhat important","Very important"))) %>%
+  mutate(presvote16post_2016 = factor(presvote16post_2016))
+is.factor(survey$presvote16post_2016)
+is.factor(survey$accurately_counted2_2016)
+is.factor(survey$alcohol_2016)
+is.factor(survey$smoke100_2016)
+is.factor(survey$pid7_2016)
+is.factor(survey$ideo5_2016)
+is.factor(survey$pew_religimp_2016)
+```
+
+
+## INTRODUCTION
+
+## EDA 
+exploring relationships between outcome variable
+
+## FEATURE EXTRACTION
+
+had to remove anyone who didn't answer who they voted for
+
+## DATA SPLITING 
+
+```{r}
+set.seed(10) # setting seed
+survey_split <- initial_split(survey, prop = 0.70,
+                                strata = presvote16post_2016)
+survey_train <- training(survey_split)
+survey_test <- testing(survey_split)
+```
+
+```{r, eval = FALSE}
+survey_folds <- vfold_cv(survey_train, v = 5, strata = presvote16post_2016)
+survey_recipe <- recipe(presvote16post_2016 ~ ft_black_2016 + ft_white_2016 + ft_hisp_2016 + 
+                           ft_asian_2016 + ft_muslim_2016 + ft_jew_2016 + ft_christ_2016 + ft_fem_2016 +
+                          ft_immig_2016 + ft_blm_2016 + ft_wallst_2016 + ft_gays_2016 + ft_unions_2016 +
+                          ft_police_2016 + ft_altright_2016 + accurately_counted2_2016 + alcohol_2016 + 
+                          smoke100_2016 + pid7_2016 + ideo5_2016 + pew_religimp_2016, survey_train) %>% 
+  step_impute_linear(ft_black_2016, impute_with = imp_vars(ft_white_2016,ft_hisp_2016,ft_asian_2016,ft_muslim_2016,ft_jew_2016,                                           ft_christ_2016,ft_fem_2016,ft_immig_2016,ft_blm_2016,ft_wallst_2016,ft_gays_2016,ft_unions_2016,
+                                                           ft_police_2016,ft_altright_2016))%>% 
+  step_impute_linear(ft_white_2016, impute_with = imp_vars(ft_black_2016,ft_hisp_2016,ft_asian_2016,ft_muslim_2016,ft_jew_2016,                                           ft_christ_2016,ft_fem_2016,ft_immig_2016,ft_blm_2016,ft_wallst_2016,ft_gays_2016,ft_unions_2016,
+                                                           ft_police_2016,ft_altright_2016))%>%
+  step_impute_linear(ft_hisp_2016, impute_with = imp_vars(ft_white_2016,ft_black_2016,ft_asian_2016,ft_muslim_2016,ft_jew_2016,                                           ft_christ_2016,ft_fem_2016,ft_immig_2016,ft_blm_2016,ft_wallst_2016,ft_gays_2016,ft_unions_2016,
+                                                           ft_police_2016,ft_altright_2016))%>%
+  step_impute_linear(ft_asian_2016, impute_with = imp_vars(ft_white_2016,ft_hisp_2016,ft_black_2016,ft_muslim_2016,ft_jew_2016,                                           ft_christ_2016,ft_fem_2016,ft_immig_2016,ft_blm_2016,ft_wallst_2016,ft_gays_2016,ft_unions_2016,
+                                                           ft_police_2016,ft_altright_2016))%>%
+  step_impute_linear(ft_muslim_2016, impute_with = imp_vars(ft_white_2016,ft_hisp_2016,ft_asian_2016,ft_black_2016,ft_jew_2016,                                           ft_christ_2016,ft_fem_2016,ft_immig_2016,ft_blm_2016,ft_wallst_2016,ft_gays_2016,ft_unions_2016,
+                                                           ft_police_2016,ft_altright_2016))%>%
+  step_impute_linear(ft_jew_2016, impute_with = imp_vars(ft_white_2016,ft_hisp_2016,ft_black_2016,ft_muslim_2016,ft_asian_2016,                                           ft_christ_2016,ft_fem_2016,ft_immig_2016,ft_blm_2016,ft_wallst_2016,ft_gays_2016,ft_unions_2016,
+                                                           ft_police_2016,ft_altright_2016))%>%
+  step_impute_linear(ft_christ_2016, impute_with = imp_vars(ft_white_2016,ft_hisp_2016,ft_black_2016,ft_muslim_2016,ft_jew_2016,                                           ft_asian_2016,ft_fem_2016,ft_immig_2016,ft_blm_2016,ft_wallst_2016,ft_gays_2016,ft_unions_2016,
+                                                           ft_police_2016,ft_altright_2016))%>%
+  step_impute_linear(ft_fem_2016, impute_with = imp_vars(ft_white_2016,ft_hisp_2016,ft_black_2016,ft_muslim_2016,ft_jew_2016,                                           ft_christ_2016,ft_asian_2016,ft_immig_2016,ft_blm_2016,ft_wallst_2016,ft_gays_2016,ft_unions_2016,
+                                                           ft_police_2016,ft_altright_2016))%>%
+  step_impute_linear(ft_immig_2016, impute_with = imp_vars(ft_white_2016,ft_hisp_2016,ft_black_2016,ft_muslim_2016,ft_jew_2016,                                           ft_christ_2016,ft_fem_2016,ft_asian_2016,ft_blm_2016,ft_wallst_2016,ft_gays_2016,ft_unions_2016,
+                                                           ft_police_2016,ft_altright_2016))%>%
+  step_impute_linear(ft_wallst_2016, impute_with = imp_vars(ft_white_2016,ft_hisp_2016,ft_black_2016,ft_muslim_2016,ft_jew_2016,                                           ft_christ_2016,ft_fem_2016,ft_immig_2016,ft_asian_2016,ft_blm_2016,ft_gays_2016,ft_unions_2016,
+                                                           ft_police_2016,ft_altright_2016))%>%
+  step_impute_linear(ft_gays_2016, impute_with = imp_vars(ft_white_2016,ft_hisp_2016,ft_black_2016,ft_muslim_2016,ft_jew_2016,                                           ft_christ_2016,ft_fem_2016,ft_immig_2016,ft_asian_2016,ft_wallst_2016,ft_blm_2016,ft_unions_2016,
+                                                           ft_police_2016,ft_altright_2016))%>%
+  step_impute_linear(ft_unions_2016, impute_with = imp_vars(ft_white_2016,ft_hisp_2016,ft_black_2016,ft_muslim_2016,ft_jew_2016,                                           ft_christ_2016,ft_fem_2016,ft_immig_2016,ft_asian_2016,ft_wallst_2016,ft_gays_2016,ft_blm_2016,
+                                                           ft_police_2016,ft_altright_2016))%>%
+  step_impute_linear(ft_police_2016, impute_with = imp_vars(ft_white_2016,ft_hisp_2016,ft_black_2016,ft_muslim_2016,ft_jew_2016,                                           ft_christ_2016,ft_fem_2016,ft_immig_2016,ft_asian_2016,ft_wallst_2016,ft_gays_2016,ft_unions_2016,
+                                                           ft_blm_2016,ft_altright_2016))%>%
+  step_impute_linear(ft_altright_2016, impute_with = imp_vars(ft_white_2016,ft_hisp_2016,ft_black_2016,ft_muslim_2016,ft_jew_2016,                                           ft_christ_2016,ft_fem_2016,ft_immig_2016,ft_asian_2016,ft_wallst_2016,ft_gays_2016,ft_unions_2016,
+                                                           ft_police_2016,ft_blm_2016))%>%
+  step_dummy(accurately_counted2_2016,alcohol_2016,smoke100_2016,pid7_2016,ideo5_2016,pew_religimp_2016) %>% 
+  step_normalize(all_predictors())
+survey_recipe
+```
+
+```{r}
+survey_folds <- vfold_cv(survey_train, v = 5, strata = presvote16post_2016)
+survey_recipe <- recipe(presvote16post_2016 ~ ft_black_2016 + ft_white_2016 + ft_hisp_2016 + 
+                           ft_asian_2016 + ft_muslim_2016 + ft_jew_2016 + ft_christ_2016 + ft_fem_2016 +
+                          ft_immig_2016 + ft_blm_2016 + ft_wallst_2016 + ft_gays_2016 + ft_unions_2016 +
+                          ft_police_2016 + ft_altright_2016 + accurately_counted2_2016 + alcohol_2016 + 
+                          smoke100_2016 + pid7_2016 + ideo5_2016 + pew_religimp_2016, survey_train) %>% 
+  step_impute_linear(ft_black_2016) %>%
+  step_impute_linear(ft_white_2016) %>%
+  step_impute_linear(ft_hisp_2016) %>%
+  step_impute_linear(ft_muslim_2016) %>%
+  step_impute_linear(ft_jew_2016) %>%
+  step_impute_linear(ft_christ_2016) %>%
+  step_impute_linear(ft_immig_2016) %>%
+  step_impute_linear(ft_asian_2016) %>%
+  step_impute_linear(ft_wallst_2016) %>%
+  step_impute_linear(ft_gays_2016) %>%
+  step_impute_linear(ft_unions_2016) %>%
+  step_impute_linear(ft_police_2016) %>%
+  step_impute_linear(ft_blm_2016) %>%
+  step_dummy(accurately_counted2_2016,alcohol_2016,smoke100_2016,pid7_2016,ideo5_2016,pew_religimp_2016) %>% 
+  step_normalize(all_predictors())
+survey_recipe
+
+
+```
+
+using cross-validation 
+
+
+## Model FITTING
+
+**Logisitic Regression**
+```{r}
+
+# logistic regression model using 'glm'
+reg <- logistic_reg() %>%
+  set_engine('glm') %>%
+  set_mode('classification')
+
+# creating a workflow
+reg_wkflow <- workflow() %>%
+  add_model(reg) %>%
+  add_recipe(survey_recipe)
+
+# fitting workflow w/ training data
+reg_fit <- fit(reg_wkflow, survey_train)
+```
+
+**LDA**
+```{r, warning = FALSE}
+# specifying linear discriminant analysis model using 'MASS'
+lda <- discrim_linear() %>%
+  set_engine('MASS') %>%
+  set_mode('classification')
+
+# creating a workflow
+lda_wkflow <- workflow() %>%
+  add_model(lda) %>%
+  add_recipe(survey_recipe)
+
+# fitting workflow w/ training data
+lda_fit <- fit(lda_wkflow, survey_train)
+```
+ Error in LDA
+
+**QDA**
+```{r}
+# specifying quad discriminant analysis model using 'MASS'
+qda <- discrim_quad() %>%
+  set_mode('classification') %>%
+  set_engine('MASS')
+
+# creating a workflow
+qda_wkflow <- workflow() %>%
+  add_model(qda) %>%
+  add_recipe(survey_recipe)
+
+# fitting workflow w/ training data
+qda_tit_fit <- fit(qda_wkflow, survey_train)
+```
+Error in QDA
+
+**Regularized Regression**
+```{r}
+library(parsnip)
+elastic_net <- multinom_reg(penalty = tune(),
+                                 mixture = tune()) %>%
+  set_mode("classification") %>%
+  set_engine("glmnet")
+
+en_workflow <- workflow() %>%
+  add_recipe(survey_recipe) %>%
+  add_model(elastic_net)
+
+en_grid <- grid_regular(penalty(range = c(-5,5)),
+                        mixture(range = c(0,1)), levels = 10)
+
+tune_res <- tune_grid(en_workflow,resamples = survey_folds,grid=en_grid)
+autoplot(tune_res)
+```
+Error "attempt to use zero-length variable name"
+
+**Generalized additive model**
+
+
+**Boosting**
+
+
+**Random Forest**
+
+
+uses at least 4 model classes 
+
+
+## CONCLUSION 
+
+## Code
+Uses the tidyverse and tidymodels for fitting models, etc. includes comments as necessary. Uses code folding so huge blocks of code aren't displayed when knitting.
+
+## Narration 
+
+
+## EDA 
+
+
+## Organization & Structure 
+
+
+## Feature Extraction 
+
+## Data Spliting
+
+
+## Model Fitting 
