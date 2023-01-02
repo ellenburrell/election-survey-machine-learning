@@ -1,11 +1,13 @@
 ---
 title: "Final Project"
-author: "Ellen Burrell: PSTAT 131"
+author: 'Ellen Burrell: PSTAT 131'
 output:
-    html_document:
-      toc: true
-      toc_float: true
-      code_folding: hide
+  pdf_document:
+    toc: yes
+  html_document:
+    toc: yes
+    toc_float: yes
+    code_folding: hide
 ---
 
 ```{r setup, include=FALSE}
@@ -533,6 +535,6 @@ Thank you for reading through!
 
 Nadeem, Reem. "In a Politically Polarized Era, Sharp Divides in Both Partisan Coalitions." Pew Research Center - U.S. Politics & Policy, Pew Research Center, 30 May 2020, <https://www.pewresearch.org/politics/2019/12/17/in-a-politically-polarized-era-sharp-divides-in-both-partisan-coalitions/>.
 
-Oleszak, Michał \"Regularization Tutorial: Ridge, Lasso & Elastic Net Regression.\" *DataCamp*, DataCamp, 12 Nov. 2019, <https://www.datacamp.com/tutorial/tutorial-ridge-lasso-elastic-net.>
+Oleszak, Michał "Regularization Tutorial: Ridge, Lasso & Elastic Net Regression." *DataCamp*, DataCamp, 12 Nov. 2019, <https://www.datacamp.com/tutorial/tutorial-ridge-lasso-elastic-net.>
 
 Democracy Fund Voter Study Group. VIEWS OF THE ELECTORATE RESEARCH SURVEY, December 2016. [Computer File] Release 1: August 28, 2017. Washington DC: Democracy Fund Voter Study Group [producer] <https://www.voterstudygroup.org/>.
