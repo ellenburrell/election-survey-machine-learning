@@ -1,13 +1,13 @@
 ---
-title: "Final Project"
+title: "Examining Machine Learning Models to predict constituents' voting from the 2016 election"
 author: 'Ellen Burrell: PSTAT 131'
 output:
-  pdf_document:
-    toc: yes
   html_document:
     toc: yes
     toc_float: yes
     code_folding: hide
+  pdf_document:
+    toc: yes
 ---
 
 ```{r setup, include=FALSE}
@@ -30,7 +30,7 @@ library(tune)
 library(parsnip)
 ```
 
-## INTRODUCTION
+## Introduction
 
 American Politics are becoming increasingly partisan at an alarming rate. While the United States has two main political parties, the division among primary voters for each party is increasing. According to a study done by the Pew Research Center, "Across 30 political values -- encompassing attitudes about guns, race, immigration, foreign policy and other realms -- the average partisan gap is 39 percentage points" between the two parties. The average difference for other grouping factors such as Education, Age, or Gender were around 6-10 percentage points (Nadeem). From this data, we can conclude that the political values that each party represents must be antithetical to have created such a sharp division.
 
@@ -113,7 +113,7 @@ I cleaned all of the feeling thermometer questions in this matter, and had to de
 
 To see more specifics of my data cleaning, I invite people to look at the cleaning folder.
 
-## EXPLATORY DATA ANALYSIS (EDA)
+## Explanatory Data Analysis (EDA)
 
 Here I am reading in the cleaned data file, and factoring all of the variables that are non-numeric.
 
@@ -220,7 +220,7 @@ corrplot(M)
 
 There are many relationships present as we explore the correlations of feeling thermometers. Most of the correlations are blue, depicting more positive correlations than negative. The feeling thermometer with the most orange/red relationships would be "ft_altright_2016" or feelings towards the Alt Right Movement. This makes sense, because the Alt-right movement traditionally wouldn't pair as well as other groups might pair together, such as BLM and Feminists. Some of the strongest associations would be between the feeling thermometers of immigrants with the feeling thermometers of Hispanics and Muslims. This relationship would hold, because the United States holds many Hispanic immigrants and Muslim immigrants, so a positive feeling between the two groups makes sense.
 
-## DATA SPLITING & MODEL FITTING
+## Data Spliting & Model Fitting
 
 To begin fitting our data to appropriate models, I first set a seed and created a survey training data set and a survey testing data set. I decided to stratify on 'presvote16post_2016' because this is our outcome variable, and stratified sampling helps to replicate the same proportions in each dataset.
 
@@ -266,7 +266,7 @@ Time for the most important part of the project: building our models. As previou
 
 To see the specific code for each Model, click the code button to the right!
 
-## MODEL 1 (Multinomial logistic regression)
+## Model 1 (Multinomial logistic regression)
 
 ```{r}
 # logistic regression model using 'glm'
@@ -295,7 +295,7 @@ log_reg_acc_est <- collect_reg$mean[2]
 #collect_reg <- collect_metrics(reg_fold)
 ```
 
-## MODEL 2 (Regularized Regression w/ Elastic Net)
+## Model 2 (Regularized Regression w/ Elastic Net)
 
 ```{r}
 library(parsnip)
@@ -325,7 +325,7 @@ reg_reg <- predicted$.estimate
 #predicted #roc_auc
 ```
 
-## MODEL 3 (DECSION TREE)
+## Model 3 (DECISION TREE)
 
 ```{r}
 # setting up decision tree model
@@ -362,7 +362,7 @@ decision <- decision_tree %>%
 decison_tree_roc <- decision$mean
 ```
 
-## MODEL 4 (RANDOM FOREST)
+## Model 4 (RANDOM FOREST)
 
 ```{r}
 rf <- rand_forest() %>%
@@ -398,7 +398,7 @@ rand_forest_tuned <- tune_forest %>%
 rf_mean <- rand_forest_tuned$mean
 ```
 
-## MODEL 5 (BOOSTED TREE)
+## Model 5 (BOOSTED TREE)
 
 ```{r,eval=FALSE}
 library(xgboost)
@@ -427,13 +427,13 @@ boasted <- boasted_tune_res %>%
 boasted_mean <- boasted$mean
 ```
 
-## SUMMARY OF MODELS
+## Summary of Models
 
 I decided to evaluate my models based on the roc_auc score (as explained above), and here we see that Regularized Regression w/ an Elastic Net won! However the margins were very close, and all of the models did pretty well.
 
 ```{r}
 roc_auc <- c(log_reg_acc_est,reg_reg,decison_tree_roc,rf_mean,boasted_mean)
-models <- c("Multinomial Regression", "Regularized Regression (Elastic Net)","Decsion Tree", "Random Forest","Boasted Tree")
+models <- c("Multinomial Regression", "Regularized Regression (Elastic Net)","Decision Tree", "Random Forest","Boasted Tree")
 results <- tibble(models=models,roc_auc= roc_auc)
 results <- results %>%
   arrange(-roc_auc)
@@ -470,7 +470,7 @@ test_acc # testing accuracy
 
 Here we can see the our Regularized Regression w/ an Elastic Net has an accuracy rating of 0.8845938 on the survey training data, and an 0.8766319 accuracy rating on the survey testing data. This is fairly high, and a really great result. A potential reason for the higher rating on the training data could be over fitting, which is common in training data sets.
 
-## MISC Visualizations
+## Misc. Visualizations
 
 Here are some interesting Visualizations from our models!
 
@@ -519,7 +519,7 @@ autoplot(decision_tree)
 
 The cost complexity parameter is used to control the size of the decision tree and to select the optimal tree size. Here we can see a sharp decline in roc_auc as our cost-complexity parameter increases, depicting a high cost of adding variables to the decision tree from the current node.
 
-## CONCLUSION
+## Conclusion
 
 We set out to determine if we could predict how a person voted in the 2016 presidential election if given someone's party affiliation or political values. We also wanted to predict which would be more important in determining who they voted for.
 
@@ -531,7 +531,7 @@ Overall this was a really interesting project, and I'm really grateful for the e
 
 Thank you for reading through!
 
-## CITATIONS
+## Citations 
 
 Nadeem, Reem. "In a Politically Polarized Era, Sharp Divides in Both Partisan Coalitions." Pew Research Center - U.S. Politics & Policy, Pew Research Center, 30 May 2020, <https://www.pewresearch.org/politics/2019/12/17/in-a-politically-polarized-era-sharp-divides-in-both-partisan-coalitions/>.
 

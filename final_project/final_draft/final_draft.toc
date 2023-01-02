@@ -1,13 +1,13 @@
-\contentsline {subsection}{INTRODUCTION}{1}{section*.2}%
+\contentsline {subsection}{Introduction}{1}{section*.2}%
 \contentsline {subsection}{Variable Selection and Data Cleaning}{2}{section*.3}%
-\contentsline {subsection}{EXPLATORY DATA ANALYSIS (EDA)}{5}{section*.4}%
-\contentsline {subsection}{DATA SPLITING \& MODEL FITTING}{8}{section*.5}%
-\contentsline {subsection}{MODEL 1 (Multinomial logistic regression)}{9}{section*.6}%
-\contentsline {subsection}{MODEL 2 (Regularized Regression w/ Elastic Net)}{10}{section*.7}%
-\contentsline {subsection}{MODEL 3 (DECSION TREE)}{10}{section*.8}%
-\contentsline {subsection}{MODEL 4 (RANDOM FOREST)}{11}{section*.9}%
-\contentsline {subsection}{MODEL 5 (BOOSTED TREE)}{11}{section*.10}%
-\contentsline {subsection}{SUMMARY OF MODELS}{12}{section*.11}%
-\contentsline {subsection}{MISC Visualizations}{13}{section*.12}%
-\contentsline {subsection}{CONCLUSION}{15}{section*.13}%
-\contentsline {subsection}{CITATIONS}{16}{section*.14}%
+\contentsline {subsection}{Explanatory Data Analysis (EDA)}{5}{section*.4}%
+\contentsline {subsection}{Data Spliting \& Model Fitting}{14}{section*.5}%
+\contentsline {subsection}{Model 1 (Multinomial logistic regression)}{15}{section*.6}%
+\contentsline {subsection}{Model 2 (Regularized Regression w/ Elastic Net)}{16}{section*.7}%
+\contentsline {subsection}{Model 3 (DECISION TREE)}{17}{section*.8}%
+\contentsline {subsection}{Model 4 (RANDOM FOREST)}{17}{section*.9}%
+\contentsline {subsection}{Model 5 (BOOSTED TREE)}{18}{section*.10}%
+\contentsline {subsection}{Summary of Models}{18}{section*.11}%
+\contentsline {subsection}{Misc. Visualizations}{21}{section*.12}%
+\contentsline {subsection}{Conclusion}{25}{section*.13}%
+\contentsline {subsection}{Citations}{26}{section*.14}%
