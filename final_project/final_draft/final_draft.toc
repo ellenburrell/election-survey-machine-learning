@@ -4,9 +4,9 @@
 \contentsline {subsection}{Data Spliting \& Model Fitting}{14}{section*.5}%
 \contentsline {subsection}{Model 1 (Multinomial logistic regression)}{15}{section*.6}%
 \contentsline {subsection}{Model 2 (Regularized Regression w/ Elastic Net)}{16}{section*.7}%
-\contentsline {subsection}{Model 3 (DECISION TREE)}{17}{section*.8}%
-\contentsline {subsection}{Model 4 (RANDOM FOREST)}{17}{section*.9}%
-\contentsline {subsection}{Model 5 (BOOSTED TREE)}{18}{section*.10}%
+\contentsline {subsection}{Model 3 (Decision Tree)}{17}{section*.8}%
+\contentsline {subsection}{Model 4 (Random Forest)}{17}{section*.9}%
+\contentsline {subsection}{Model 5 (Boosted Tree)}{18}{section*.10}%
 \contentsline {subsection}{Summary of Models}{18}{section*.11}%
 \contentsline {subsection}{Misc. Visualizations}{21}{section*.12}%
 \contentsline {subsection}{Conclusion}{25}{section*.13}%

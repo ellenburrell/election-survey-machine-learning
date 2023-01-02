@@ -2,12 +2,12 @@
 title: "Examining Machine Learning Models to predict constituents' voting from the 2016 election"
 author: 'Ellen Burrell: PSTAT 131'
 output:
+  pdf_document:
+    toc: yes
   html_document:
     toc: yes
     toc_float: yes
     code_folding: hide
-  pdf_document:
-    toc: yes
 ---
 
 ```{r setup, include=FALSE}
@@ -325,7 +325,7 @@ reg_reg <- predicted$.estimate
 #predicted #roc_auc
 ```
 
-## Model 3 (DECISION TREE)
+## Model 3 (Decision Tree)
 
 ```{r}
 # setting up decision tree model
@@ -362,7 +362,7 @@ decision <- decision_tree %>%
 decison_tree_roc <- decision$mean
 ```
 
-## Model 4 (RANDOM FOREST)
+## Model 4 (Random Forest)
 
 ```{r}
 rf <- rand_forest() %>%
@@ -398,7 +398,7 @@ rand_forest_tuned <- tune_forest %>%
 rf_mean <- rand_forest_tuned$mean
 ```
 
-## Model 5 (BOOSTED TREE)
+## Model 5 (Boosted Tree)
 
 ```{r,eval=FALSE}
 library(xgboost)
